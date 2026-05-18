@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament Management System</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #dc2626;
+            --success: #16a34a;
+            --warning: #d97706;
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --border: #d1d5db;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+        }
+
+        /* --- LOGIN SECTION --- */
+        #auth-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #e5e7eb;
+            padding: 20px;
+        }
+        .auth-card {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid var(--border);
+        }
+        .auth-card h2 {
+            text-align: center;
+            margin-top: 0;
+            color: var(--text-main);
+        }
+
+        /* --- NAVIGATION --- */
+        nav {
+            background: var(--card);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .nav-brand { 
+            font-size: 1.2rem; 
+            font-weight: bold; 
+            color: var(--primary);
+        }
+        .nav-links { display: flex; gap: 10px; flex-wrap: wrap; }
+        .nav-links button {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .nav-links button:hover { background: #f9fafb; }
+        .nav-links button.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .btn-logout { color: var(--secondary) !important; border-color: var(--secondary) !important; }
+
+        /* --- LAYOUT & CARDS --- */
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+        .card { 
+            background: var(--card); 
+            padding: 25px; 
+            border-radius: 6px; 
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+        
+        .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .field { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 0.85rem; font-weight: 600; color: var(--text-main); }
+        input, select { 
+            padding: 10px; 
+            border: 1px solid var(--border); 
+            border-radius: 4px; 
+            font-size: 14px; 
+            width: 100%;
+        }
+
+        /* --- SUMMARY STATS --- */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: var(--card);
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+        .stat-card h3 { margin: 0; font-size: 0.85rem; color: var(--text-muted); }
+        .stat-card .value { font-size: 1.8rem; font-weight: bold; margin-top: 5px; color: var(--text-main); }
+
+        /* --- TABLE --- */
+        .list-section { 
+            background: white; 
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow-x: auto; 
+        }
+        table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        th { 
+            background: #f9fafb; 
+            padding: 12px; 
+            text-align: left; 
+            font-size: 13px; 
+            border-bottom: 2px solid var(--border);
+        }
+        td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        tr:hover td { background: #f9fafb; }
+        .dojang-group-header { 
+            background: #f3f4f6 !important; 
+            padding: 10px 15px; 
+            font-weight: bold; 
+            border-left: 4px solid var(--primary); 
+        }
+
+        /* --- BUTTONS --- */
+        .btn { padding: 10px 15px; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 14px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-print { background: #4b5563; color: white; }
+        
+        .action-btn { background: none; border: 1px solid var(--border); cursor: pointer; font-size: 12px; padding: 4px 8px; border-radius: 4px; margin-right: 5px;}
+        .action-btn:hover { background: #f3f4f6; }
+
+        .hidden { display: none !important; }
+        .text-red { color: var(--secondary); }
+        .text-green { color: var(--success); }
+
+        /* --- BRACKETS --- */
+        .bracket-wrapper { margin-bottom: 40px; border: 1px solid var(--border); background: white; }
+        .bracket-header { background: #f9fafb; padding: 10px 15px; margin: 0; font-size: 1rem; border-bottom: 1px solid var(--border); }
+        .bracket-container { display: flex; padding: 20px; overflow-x: auto; gap: 30px; }
+        
+        .round { display: flex; flex-direction: column; justify-content: space-around; min-width: 200px; }
+        .match-pair { display: flex; flex-direction: column; justify-content: space-around; flex-grow: 1; position: relative; }
+        
+        .match-box { 
+            margin: 10px 0; border: 1px solid var(--text-main); background: white; position: relative; z-index: 2;
+        }
+        .player-slot { padding: 5px 10px; height: 35px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; border-bottom: 1px solid var(--border); }
+        .player-slot:last-child { border-bottom: none; }
+        .player-dojang { font-size: 11px; color: var(--text-muted); }
+
+        .round:not(:last-child) .match-box::after { content: ''; position: absolute; right: -15px; top: 50%; width: 15px; border-top: 1px solid var(--text-main); }
+        .round:not(:first-child) .match-box::before { content: ''; position: absolute; left: -15px; top: 50%; width: 15px; border-top: 1px solid var(--text-main); }
+        .round:not(:last-child) .match-pair:not(.single-match)::after { content: ''; position: absolute; right: -15px; top: 25%; height: 50%; border-right: 1px solid var(--text-main); }
+
+        .round:not(:last-child) .single-match::after { display: none; }
+        .winner-box { border: 2px solid var(--primary); background: #eff6ff; }
+        .winner-box::before { left: -15px; border-top: 1px solid var(--text-main); }
+        .winner-box::after { display: none !important; }
+        .final-match::before, .final-match::after { display: none !important; }
+
+        /* --- ALIGNED PRINT CSS --- */
+        @media print {
+            body { background: white !important; font-size: 12pt; }
+            nav, .filter-bar, .no-print, .action-btn, #auth-section { display: none !important; }
+            .container { max-width: 100%; margin: 0; padding: 0; }
+            .card { border: none; padding: 0; }
+            
+            /* Align Table Printing */
+            table { width: 100%; border-collapse: collapse; }
+            thead { display: table-header-group; } /* Repeats header on new pages */
+            tr { page-break-inside: avoid; } /* Prevents rows splitting across pages */
+            td, th { border: 1px solid #000; padding: 8px; }
+            .dojang-group-header { background: #eee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+            /* Align Bracket Printing */
+            .bracket-wrapper { page-break-inside: avoid; border: 1px solid #000; margin-bottom: 20px; }
+            .bracket-header { border-bottom: 1px solid #000; }
+            .match-box { border: 1px solid #000; }
+            .player-slot { border-bottom: 1px solid #000; }
+            .round:not(:last-child) .match-box::after, .round:not(:first-child) .match-box::before { border-color: #000; }
+            .round:not(:last-child) .match-pair:not(.single-match)::after { border-color: #000; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SECURE LOGIN -->
+<section id="auth-section">
+    <div class="auth-card">
+        <h2>System Login</h2>
+        <div class="field">
+            <label>Admin Email</label>
+            <input type="email" id="auth-email" placeholder="Email">
+        </div>
+        <div class="field">
+            <label>Password</label>
+            <input type="password" id="auth-password" placeholder="Password">
+        </div>
+        <button class="btn btn-primary" style="width:100%; margin-top:15px;" onclick="window.loginAdmin()">Login</button>
+        <p id="auth-error" class="text-red" style="text-align:center; font-size:13px; margin-top:10px;"></p>
+    </div>
+</section>
+
+<!-- MAIN APP -->
+<div id="main-app" class="hidden">
+    <nav>
+        <div class="nav-brand">Tournament Management System</div>
+        <div class="nav-links">
+            <button id="btn-reg" class="active" onclick="window.showPage('reg')">Registration</button>
+            <button id="btn-list" onclick="window.showPage('list')">Participant List</button>
+            <button id="btn-fix" onclick="window.showPage('fix')">Fixtures</button>
+            <button class="btn-logout" onclick="window.logoutAdmin()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- PAGE: REGISTRATION -->
+        <section id="page-reg">
+            <div class="card">
+                <h2 id="form-title" style="margin-top:0;">Participant Entry Form</h2>
+                <div class="grid-form">
+                    <div class="field"><label>Full Name</label><input type="text" id="p-name"></div>
+                    <div class="field"><label>Height (cm) <small class="text-red">*Req for Peewee/Fresher</small></label><input type="number" id="p-height"></div>
+                    <div class="field"><label>Gender</label><select id="p-gender"><option>Male</option><option>Female</option></select></div>
+                    <div class="field"><label>Dojang (Club)</label><input type="text" id="p-dojang"></div>
+                    <div class="field"><label>Coach Name</label><input type="text" id="p-coach"></div>
+                    <div class="field">
+                        <label>Event Category</label>
+                        <select id="p-comp">
+                            <option>Kyrougi</option><option>Poomsae</option><option>Team Fight</option>
+                            <option>Free Style</option><option>Team Poomsae</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Age Division</label>
+                        <select id="p-age">
+                            <option>Pee-wee</option><option>Sub-Junior</option>
+                            <option>Cadet</option><option>Junior</option><option>Senior</option>
+                        </select>
+                    </div>
+                    <div class="field"><label>Experience Level</label><select id="p-level"><option>Freshers</option><option>Advanced</option></select></div>
+                    <div class="field"><label>Weight Class</label><input type="text" id="p-weight" placeholder="e.g. -45kg"></div>
+                    <div class="field"><label>Entry Fee</label><input type="number" id="f-req" value="1000"></div>
+                    <div class="field"><label>Amount Paid</label><input type="number" id="f-paid"></div>
+                </div>
+                <div style="margin-top:20px; display: flex; gap: 10px;">
+                    <button id="submit-btn" class="btn btn-success" onclick="window.savePlayer()">Save Participant</button>
+                    <button id="cancel-edit-btn" class="btn hidden" onclick="window.cancelEdit()" style="background:#e5e7eb; color:black;">Cancel</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE: PARTICIPANT LIST -->
+        <section id="page-list" class="hidden">
+            <div class="summary-grid">
+                <div class="stat-card"><h3>Total Registered</h3><div class="value" id="stat-total">0</div></div>
+                <div class="stat-card"><h3>Fees Collected</h3><div class="value text-green" id="stat-collected">0</div></div>
+                <div class="stat-card"><h3>Outstanding Dues</h3><div class="value text-red" id="stat-dues">0</div></div>
+            </div>
+
+            <div class="card filter-bar">
+                <div class="field"><label>Search</label><input type="text" id="f-search" oninput="window.renderPlayerList()"></div>
+                <div class="field"><label>Dojang</label><select id="f-dojang" onchange="window.renderPlayerList()"><option value="All">All</option></select></div>
+                <div class="field"><label>Event</label><select id="f-comp" onchange="window.renderPlayerList()"><option value="All">All</option><option>Kyrougi</option><option>Poomsae</option><option>Team Fight</option><option>Free Style</option><option>Team Poomsae</option></select></div>
+                <div class="field"><label>Division</label><select id="f-age" onchange="window.renderPlayerList()"><option value="All">All</option><option>Pee-wee</option><option>Sub-Junior</option><option>Cadet</option><option>Junior</option><option>Senior</option></select></div>
+                <div class="field"><label>Gender</label><select id="f-gender" onchange="window.renderPlayerList()"><option value="All">All</option><option>Male</option><option>Female</option></select></div>
+                <div class="field"><label>Level</label><select id="f-level" onchange="window.renderPlayerList()"><option value="All">All</option><option>Freshers</option><option>Advanced</option></select></div>
+                
+                <!-- NEW: Print List Button -->
+                <div class="field" style="justify-content: flex-end;">
+                    <button class="btn btn-print no-print" onclick="window.print()">Print List</button>
+                </div>
+            </div>
+
+            <div class="list-section">
+                <table id="mainTable">
+                    <thead>
+                        <tr>
+                            <th>Athlete Details</th>
+                            <th>Event Info</th>
+                            <th>Coach & Level</th>
+                            <th>Finance</th>
+                            <th class="no-print">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="list-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- PAGE: FIXTURES -->
+        <section id="page-fix" class="hidden">
+            <div class="card no-print">
+                <h2 style="margin-top:0;">Bracket Generator</h2>
+                <div style="display:flex; gap:15px; align-items:end; flex-wrap: wrap;">
+                    <div class="field" style="min-width: 200px;">
+                        <label>Select Event</label>
+                        <select id="fix-filter-comp">
+                            <option>Kyrougi</option><option>Poomsae</option><option>Team Fight</option><option>Free Style</option><option>Team Poomsae</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="window.generateTournament()">Generate Brackets</button>
+                    <button class="btn btn-print" onclick="window.print()">Print Fixtures</button>
+                </div>
+            </div>
+            
+            <div id="bracket-output"></div>
+        </section>
+    </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCQSwR3mu4aRGPJMwLm6JGeokQALpub8z0",
+        authDomain: "sata-d1ec1.firebaseapp.com",
+        databaseURL: "https://sata-d1ec1-default-rtdb.firebaseio.com",
+        projectId: "sata-d1ec1",
+        storageBucket: "sata-d1ec1.firebasestorage.app",
+        messagingSenderId: "615274110749",
+        appId: "1:615274110749:web:a5ee915bf6e201bcddcbf4",
+        measurementId: "G-QK4KKR2QQR"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+    const dbRef = ref(db, 'players');
+
+    let players = [];
+    let editingId = null;
+
+    // --- AUTHENTICATION ---
+    const authSection = document.getElementById('auth-section');
+    const mainApp = document.getElementById('main-app');
+    const errorText = document.getElementById('auth-error');
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            authSection.classList.add('hidden');
+            mainApp.classList.remove('hidden');
+            loadDatabaseData(); 
+        } else {
+            authSection.classList.remove('hidden');
+            mainApp.classList.add('hidden');
+        }
+    });
+
+    window.loginAdmin = function() {
+        const email = document.getElementById('auth-email').value.trim();
+        const password = document.getElementById('auth-password').value.trim();
+        if(!email || !password) return errorText.innerText = "Enter credentials.";
+        
+        errorText.innerText = "Loading...";
+        signInWithEmailAndPassword(auth, email, password)
+            .then(() => { errorText.innerText = ""; document.getElementById('auth-password').value = ""; })
+            .catch(() => { errorText.innerText = "Login Failed."; });
+    };
+
+    window.logoutAdmin = function() { signOut(auth); };
+
+    // --- DATABASE & LOGIC ---
+    function loadDatabaseData() {
+        onValue(dbRef, (snapshot) => {
+            players = [];
+            const data = snapshot.val();
+            if (data) {
+                for (let key in data) { players.push({ id: key, ...data[key] }); }
+            }
+            updateDojangFilter();
+            renderPlayerList();
+        });
+    }
+
+    window.showPage = function(pageId) {
+        document.querySelectorAll('#main-app section').forEach(s => s.classList.add('hidden'));
+        document.getElementById('page-' + pageId).classList.remove('hidden');
+        document.querySelectorAll('.nav-links button:not(.btn-logout)').forEach(b => b.classList.remove('active'));
+        document.getElementById('btn-' + pageId).classList.add('active');
+    };
+
+    window.savePlayer = function() {
+        const p = {
+            name: document.getElementById('p-name').value.trim(),
+            height: document.getElementById('p-height').value,
+            gender: document.getElementById('p-gender').value,
+            dojang: document.getElementById('p-dojang').value.trim(),
+            coach: document.getElementById('p-coach').value.trim(),
+            comp: document.getElementById('p-comp').value,
+            age: document.getElementById('p-age').value,
+            level: document.getElementById('p-level').value,
+            weight: document.getElementById('p-weight').value,
+            req: parseFloat(document.getElementById('f-req').value) || 0,
+            paid: parseFloat(document.getElementById('f-paid').value) || 0
+        };
+
+        if(!p.name || !p.dojang) return alert("Required: Name and Dojang");
+
+        if (editingId) {
+            update(ref(db, 'players/' + editingId), p)
+                .then(() => { window.cancelEdit(); window.showPage('list'); })
+                .catch(err => alert(err.message));
+        } else {
+            push(dbRef, p).then(() => { clearForm(); }).catch(err => alert(err.message));
+        }
+    };
+
+    window.editPlayer = function(id) {
+        const player = players.find(p => p.id === id);
+        if(!player) return;
+
+        editingId = id;
+        document.getElementById('form-title').innerText = "Edit Record";
+        document.getElementById('submit-btn').innerText = "Update";
+        document.getElementById('cancel-edit-btn').classList.remove('hidden');
+
+        document.getElementById('p-name').value = player.name || '';
+        document.getElementById('p-height').value = player.height || '';
+        document.getElementById('p-gender').value = player.gender || 'Male';
+        document.getElementById('p-dojang').value = player.dojang || '';
+        document.getElementById('p-coach').value = player.coach || '';
+        document.getElementById('p-comp').value = player.comp || 'Kyrougi';
+        document.getElementById('p-age').value = player.age || 'Pee-wee';
+        document.getElementById('p-level').value = player.level || 'Freshers';
+        document.getElementById('p-weight').value = player.weight || '';
+        document.getElementById('f-req').value = player.req || 0;
+        document.getElementById('f-paid').value = player.paid || 0;
+
+        window.showPage('reg');
+    };
+
+    window.deletePlayer = function(id) {
+        if(confirm("Delete record?")) remove(ref(db, 'players/' + id));
+    };
+
+    window.cancelEdit = function() {
+        editingId = null;
+        document.getElementById('form-title').innerText = "Participant Entry Form";
+        document.getElementById('submit-btn').innerText = "Save Participant";
+        document.getElementById('cancel-edit-btn').classList.add('hidden');
+        clearForm();
+    };
+
+    function clearForm() {
+        document.getElementById('p-name').value = '';
+        document.getElementById('p-height').value = '';
+        document.getElementById('p-weight').value = '';
+        document.getElementById('f-paid').value = '';
+    }
+
+    function updateDojangFilter() {
+        const selector = document.getElementById('f-dojang');
+        const currentSelection = selector.value;
+        const dojangs = [...new Set(players.map(p => p.dojang))].sort();
+        selector.innerHTML = '<option value="All">All</option>';
+        dojangs.forEach(d => { if(d) selector.innerHTML += `<option value="${d}">${d}</option>`; });
+        selector.value = currentSelection; 
+    }
+
+    window.renderPlayerList = function() {
+        const body = document.getElementById('list-body');
+        
+        const search = document.getElementById('f-search').value.toLowerCase();
+        const dojang = document.getElementById('f-dojang').value;
+        const comp = document.getElementById('f-comp').value;
+        const age = document.getElementById('f-age').value;
+        const gender = document.getElementById('f-gender').value;
+        const level = document.getElementById('f-level').value;
+
+        let totalColl = 0, totalDue = 0;
+
+        let filtered = players.filter(p => {
+            return (
+                (p.name.toLowerCase().includes(search) || p.dojang.toLowerCase().includes(search)) &&
+                (dojang === "All" || p.dojang === dojang) &&
+                (comp === "All" || p.comp === comp) &&
+                (age === "All" || p.age === age) &&
+                (gender === "All" || p.gender === gender) &&
+                (level === "All" || p.level === level)
+            );
+        });
+
+        filtered.forEach(p => {
+            totalColl += Number(p.paid);
+            const diff = Number(p.req) - Number(p.paid);
+            if(diff > 0) totalDue += diff;
+        });
+
+        document.getElementById('stat-total').innerText = filtered.length;
+        document.getElementById('stat-collected').innerText = totalColl;
+        document.getElementById('stat-dues').innerText = totalDue;
+
+        body.innerHTML = '';
+        const grouped = {};
+        filtered.forEach(p => {
+            const d = p.dojang || "Unknown";
+            if(!grouped[d]) grouped[d] = [];
+            grouped[d].push(p);
+        });
+
+        for(const d in grouped) {
+            body.innerHTML += `<tr><td colspan="5" class="dojang-group-header">${d} (${grouped[d].length})</td></tr>`;
+            grouped[d].forEach(p => {
+                const diff = p.req - p.paid;
+                body.innerHTML += `
+                    <tr>
+                        <td><strong>${p.name}</strong><br><small>${p.gender} | ${p.height ? p.height+'cm' : 'No Ht'}</small></td>
+                        <td>${p.comp}<br><small>${p.age} • ${p.weight || 'Open'}</small></td>
+                        <td>${p.coach || 'N/A'}<br><small>${p.level}</small></td>
+                        <td>Paid: ${p.paid}/${p.req} <br> ${diff > 0 ? '<small class="text-red">Due: '+diff+'</small>' : ''}</td>
+                        <td class="no-print">
+                            <button class="action-btn" onclick="window.editPlayer('${p.id}')">Edit</button>
+                            <button class="action-btn" onclick="window.deletePlayer('${p.id}')">Del</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+    };
+
+    function getHeightBracket(h) {
+        if (!h || isNaN(h)) return 'Open Ht';
+        let height = parseInt(h);
+        let base = Math.floor(height / 5) * 5; 
+        return `${base}-${base + 4}cm`;
+    }
+
+    function generateMatchBox(p1, p2) {
+        return `<div class="match-box">
+            <div class="player-slot"><span>${p1 ? p1.name : '<i style="color:#9ca3af">BYE</i>'}</span><span class="player-dojang">${p1 ? p1.dojang : ''}</span></div>
+            <div class="player-slot"><span>${p2 ? p2.name : '<i style="color:#9ca3af">BYE</i>'}</span><span class="player-dojang">${p2 ? p2.dojang : ''}</span></div>
+        </div>`;
+    }
+    function generateEmptyMatchBox() {
+        return `<div class="match-box"><div class="player-slot"></div><div class="player-slot"></div></div>`;
+    }
+
+    window.generateTournament = function() {
+        const type = document.getElementById('fix-filter-comp').value;
+        const output = document.getElementById('bracket-output');
+        
+        output.innerHTML = `<h2 class="no-print">${type} Brackets</h2>`;
+
+        const pool = players.filter(p => p.comp === type);
+        const groups = {};
+        
+        pool.forEach(p => {
+            let key = "";
+            const isBeginner = (p.level === 'Freshers');
+            const isPeewee = (p.age === 'Pee-wee');
+
+            if (isPeewee || isBeginner) {
+                let tolHeight = getHeightBracket(p.height);
+                key = `${p.age} | ${p.level} | ${p.gender} | ${p.weight || 'Open'} | ${tolHeight}`;
+            } else {
+                key = `${p.age} | ${p.gender} | ${p.weight || 'Open'} (${p.level})`;
+            }
+            if(!groups[key]) groups[key] = [];
+            groups[key].push(p);
+        });
+
+        if(Object.keys(groups).length === 0) {
+            output.innerHTML += `<p>No athletes found.</p>`; return;
+        }
+
+        for(const title in groups) {
+            const groupPlayers = groups[title].sort(() => Math.random() - 0.5);
+            const size = Math.pow(2, Math.ceil(Math.log2(groupPlayers.length || 1)));
+            const totalRounds = Math.log2(size);
+            
+            let currentPlayers = [...groupPlayers];
+            while(currentPlayers.length < size) currentPlayers.push(null); 
+            
+            let html = `<div class="bracket-wrapper">
+                <div class="bracket-header">${title} <span style="float:right;">Count: ${groupPlayers.length}</span></div>
+                <div class="bracket-container">`;
+            
+            let matchesInRound = size / 2;
+
+            for (let r = 0; r <= totalRounds; r++) {
+                html += `<div class="round">`;
+                if (matchesInRound >= 1) {
+                    for (let i = 0; i < matchesInRound; i += 2) {
+                        const isSingle = (matchesInRound === 1);
+                        html += `<div class="match-pair ${isSingle ? 'single-match' : ''}">`;
+                        
+                        if (r === 0) html += generateMatchBox(currentPlayers[i*2], currentPlayers[i*2 + 1]);
+                        else html += generateEmptyMatchBox();
+
+                        if (!isSingle) {
+                            if (r === 0) html += generateMatchBox(currentPlayers[i*2 + 2], currentPlayers[i*2 + 3]);
+                            else html += generateEmptyMatchBox();
+                        }
+                        html += `</div>`;
+                    }
+                } else {
+                    html += `<div class="match-pair final-match"><div class="match-box winner-box"><div class="player-slot" style="justify-content:center;"><strong>Winner</strong></div></div></div>`;
+                }
+                html += `</div>`;
+                matchesInRound /= 2;
+            }
+            html += `</div></div>`;
+            output.innerHTML += html;
+        }
+    };
+</script>
+</body>
+</html>
